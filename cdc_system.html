@@ -1,0 +1,15 @@
+A change data capture (CDC) system typically consists of the following main parts:
+
+    Data Capture: This component captures the changes made to the data in the source system. This can be done using database triggers, log files, or other methods that allow the system to detect and record changes to the data.
+
+    Change Data Repository: This component stores the changes captured by the data capture component. The repository is typically a separate database or log file that is used to store the changes in a structured format.
+
+    Data Transformation: This component is responsible for transforming the captured changes into a format that can be used by the target system. This can include converting data types, mapping fields, or adding missing information.
+
+    Data Loading: This component is responsible for loading the transformed data into the target system. This can be done using a variety of methods such as SQL scripts, bulk load utilities, or APIs.
+
+    Error Handling: This component is responsible for handling any errors that may occur during the CDC process. This can include logging errors, retrying failed loads, or sending notifications to system administrators.
+
+    Monitoring and reporting: This component allows to monitor the CDC system and provide reports about the changes that were captured, applied, rejected and other information about the CDC process.
+
+Together, these components work together to capture changes made to the data in the source system, store them in a separate repository, transform them into a format that can be used by the target system, and load them into the target system in a controlled and organized manner.
