@@ -1,0 +1,70 @@
+<html>
+  <body>
+    <div class="markdown prose w-full break-words dark:prose-invert light"><pre><div class="bg-black mb-4 rounded-md"><div class="flex items-center relative text-gray-200 bg-gray-800 px-4 py-2 text-xs font-sans"><button class="flex ml-auto gap-2"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button></div><div class="p-4 overflow-y-auto"><code class="!whitespace-pre-wrap hljs language-php"><span class="hljs-meta">&lt;?php</span>
+
+<span class="hljs-comment">// Get the memory usage at the start of the script</span>
+<span class="hljs-keyword">echo</span> <span class="hljs-string">"Initial Memory Usage: "</span> . <span class="hljs-title function_ invoke__">formatSizeUnits</span>(<span class="hljs-title function_ invoke__">memory_get_usage</span>()) . <span class="hljs-string">"\n"</span>;
+
+<span class="hljs-variable">$file</span> = <span class="hljs-string">'large_file.tsv'</span>;
+<span class="hljs-variable">$headers</span> = <span class="hljs-literal">null</span>;
+<span class="hljs-variable">$delimiter</span> = <span class="hljs-string">"\t"</span>;
+<span class="hljs-variable">$row_count</span> = <span class="hljs-number">0</span>;
+<span class="hljs-variable">$file_count</span> = <span class="hljs-number">1</span>;
+
+<span class="hljs-comment">// Open the file using the read mode</span>
+<span class="hljs-variable">$handle</span> = <span class="hljs-title function_ invoke__">fopen</span>(<span class="hljs-variable">$file</span>, <span class="hljs-string">'r'</span>);
+
+<span class="hljs-keyword">while</span> ((<span class="hljs-variable">$row</span> = <span class="hljs-title function_ invoke__">fgetcsv</span>(<span class="hljs-variable">$handle</span>, <span class="hljs-number">0</span>, <span class="hljs-variable">$delimiter</span>)) !== <span class="hljs-literal">false</span>) {
+    <span class="hljs-comment">// Get the memory usage at the start of the loop</span>
+    <span class="hljs-keyword">echo</span> <span class="hljs-string">"Loop Start Memory Usage: "</span> . <span class="hljs-title function_ invoke__">formatSizeUnits</span>(<span class="hljs-title function_ invoke__">memory_get_usage</span>()) . <span class="hljs-string">"\n"</span>;
+    <span class="hljs-keyword">if</span> (<span class="hljs-variable">$headers</span> === <span class="hljs-literal">null</span>) {
+        <span class="hljs-variable">$headers</span> = <span class="hljs-variable">$row</span>;
+        <span class="hljs-keyword">continue</span>;
+    }
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-variable">$row_count</span> === <span class="hljs-number">0</span>) {
+        <span class="hljs-variable">$file_name</span> = <span class="hljs-string">'split_file_'</span> . <span class="hljs-variable">$file_count</span> . <span class="hljs-string">'.tsv'</span>;
+        <span class="hljs-variable">$fp</span> = <span class="hljs-title function_ invoke__">fopen</span>(<span class="hljs-variable">$file_name</span>, <span class="hljs-string">'w'</span>);
+        <span class="hljs-title function_ invoke__">fputcsv</span>(<span class="hljs-variable">$fp</span>, <span class="hljs-variable">$headers</span>, <span class="hljs-variable">$delimiter</span>);
+    }
+
+    <span class="hljs-title function_ invoke__">fputcsv</span>(<span class="hljs-variable">$fp</span>, <span class="hljs-variable">$row</span>, <span class="hljs-variable">$delimiter</span>);
+    <span class="hljs-variable">$row_count</span>++;
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-variable">$row_count</span> === <span class="hljs-number">50000</span>) {
+        <span class="hljs-title function_ invoke__">fclose</span>(<span class="hljs-variable">$fp</span>);
+        <span class="hljs-variable">$row_count</span> = <span class="hljs-number">0</span>;
+        <span class="hljs-variable">$file_count</span>++;
+    }
+    <span class="hljs-comment">// Get the memory usage at the end of the loop</span>
+    <span class="hljs-keyword">echo</span> <span class="hljs-string">"Loop End Memory Usage: "</span> . <span class="hljs-title function_ invoke__">formatSizeUnits</span>(<span class="hljs-title function_ invoke__">memory_get_usage</span>()) . <span class="hljs-string">"\n"</span>;
+}
+
+<span class="hljs-title function_ invoke__">fclose</span>(<span class="hljs-variable">$handle</span>);
+
+<span class="hljs-comment">// Get the memory usage at the end of the script</span>
+<span class="hljs-keyword">echo</span> <span class="hljs-string">"Final Memory Usage: "</span> . <span class="hljs-title function_ invoke__">formatSizeUnits</span>(<span class="hljs-title function_ invoke__">memory_get_usage</span>()) . <span class="hljs-string">"\n"</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">formatSizeUnits</span>(<span class="hljs-params"><span class="hljs-variable">$bytes</span></span>)
+</span>{
+    <span class="hljs-keyword">if</span> (<span class="hljs-variable">$bytes</span> &gt;= <span class="hljs-number">1073741824</span>) {
+        <span class="hljs-variable">$bytes</span> = <span class="hljs-title function_ invoke__">number_format</span>(<span class="hljs-variable">$bytes</span> / <span class="hljs-number">1073741824</span>, <span class="hljs-number">2</span>) . <span class="hljs-string">' GB'</span>;
+    } <span class="hljs-keyword">elseif</span> (<span class="hljs-variable">$bytes</span> &gt;= <span class="hljs-number">1048576</span>) {
+        <span class="hljs-variable">$bytes</span> = <span class="hljs-title function_ invoke__">number_format</span>(<span class="hljs-variable">$bytes</span> / <span class="hljs-number">1048576</span>, <span class="hljs-number">2</span>) . <span class="hljs-string">' MB'</span>;
+    } <span class="hljs-keyword">elseif</span> (<span class="hljs-variable">$bytes</span> &gt;= <span class="hljs-number">1024</span>) {
+        <span class="hljs-variable">$bytes</span> = <span class="hljs-title function_ invoke__">number_format</span>(<span class="hljs-variable">$bytes</span> / <span class="hljs-number">1024</span>, <span class="hljs-number">2</span>) . <span class="hljs-string">' KB'</span>;
+    } <span class="hljs-keyword">elseif</span> (<span class="hljs-variable">$bytes</span> &gt; <span class="hljs-number">1</span>) {
+        <span class="hljs-variable">$bytes</span> = <span class="hljs-variable">$bytes</span> . <span class="hljs-string">' bytes'</span>;
+    } <span class="hljs-keyword">elseif</span> (<span class="hljs-variable">$bytes</span> == <span class="hljs-number">1</span>) {
+        <span class="hljs-variable">$bytes</span> = <span class="hljs-variable">$bytes</span> . <span class="hljs-string">' byte'</span>;
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-variable">$bytes</span> = <span class="hljs-string">'0 bytes'</span>;
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$bytes</span>;
+}
+
+<span class="hljs-meta">?&gt;</span>
+</code></div></div></pre><p>This script reads in a large TSV file, <code>large_file.tsv</code>, and splits it into smaller TSV files, each containing a maximum of 50000 lines of data. The first row of the input file is assumed to contain the headers, and these are included in the first output file. The output files are named <code>split_file_1.tsv</code>, <code>split_file_2.tsv</code>, etc.</p><p>This script uses the <code>memory_get_usage()</code> function to get the current memory usage at different stages in the script, and the <code>formatSizeUnits()</code> function to format the memory usage in human-readable units (bytes, KB, MB, GB).</p><p>In order to minimize the memory usage, this script reads the large file line by line, rather than</p></div>
+    </body>
+</html>
+      
