@@ -1,116 +1,181 @@
 <html>
   <body>
-    <p>
-          Connect to the FTP repository using Laravel and Guzzle.
-    Fetch a list of all zip files in the FTP repository, sorted by date and time of creation.
-    Connect to the Azure cloud blob storage container.
-    Fetch a list of all zip files in the Azure cloud container.
-    Compare the two lists of zip files to determine which ones are only present in the FTP repository.
-    Download only the latest zip files from the FTP repository that are not available in the Azure cloud container.
-    Upload the latest zip files to the Azure cloud container if they don't exist.
-    Extract only the latest files starting with "ABC_", "DEF_", or "KLM_" from the latest zip files.
-    Upload the latest extracted files to separate directories in the Azure cloud based on their suffix date.
-    Retrieve the latest document for a given prefix by searching the directories in the Azure cloud based on the date in the file name.
-    Store and manage the latest extracted files with a chronological file management and version control structure in the Azure cloud.
-    Optionally, further optimize the efficiency by checking a local cache of the files, rather than re-downloading them from the FTP repository every time.
-    </p>
-<code>
-class LatestDocumentController extends Controller
-{
-    private $ftpRepository;
-    private $azureCloudContainer;
-    private $client;
+    <ul><li>Connect to the FTP repository using Laravel and Guzzle.</li><li>Fetch a list of all zip files in the FTP repository, sorted by date and time of creation.</li><li>Connect to the Azure cloud blob storage container.</li><li>Fetch a list of all zip files in the Azure cloud container.</li><li>Compare the two lists of zip files to determine which ones are only present in the FTP repository.</li><li>Download only the latest zip files from the FTP repository that are not available in the Azure cloud container.</li><li>Upload the latest zip files to the Azure cloud container if they don't exist.</li><li>Extract only the latest files starting with "ABC_", "DEF_", or "KLM_" from the latest zip files.</li><li>Upload the latest extracted files to separate directories in the Azure cloud based on their suffix date.</li><li>Retrieve the latest document for a given prefix by searching the directories in the Azure cloud based on the date in the file name.</li><li>Store and manage the latest extracted files with a chronological file management and version control structure in the Azure cloud.</li><li>Optionally, further optimize the efficiency by checking a local cache of the files, rather than re-downloading them from the FTP repository every time.</li></ul>
+<code class="!whitespace-pre hljs language-php"><span class="hljs-meta">&lt;?php</span>
 
-    public function __construct()
-    {
-        // FTP repository endpoint
-        $this->ftpRepository = 'ftp://your-ftp-repository.com';
-        // Azure cloud container endpoint
-        $this->azureCloudContainer = 'https://your-azure-container.blob.core.windows.net';
+<span class="hljs-keyword">namespace</span> <span class="hljs-title class_">App</span>\<span class="hljs-title class_">Http</span>\<span class="hljs-title class_">Controllers</span>;
 
-        // Guzzle client to make HTTP requests
-        $this->client = new Client();
+<span class="hljs-keyword">use</span> <span class="hljs-title">Illuminate</span>\<span class="hljs-title">Http</span>\<span class="hljs-title">Request</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">Illuminate</span>\<span class="hljs-title">Support</span>\<span class="hljs-title">Facades</span>\<span class="hljs-title">Storage</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">GuzzleHttp</span>\<span class="hljs-title">Client</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LatestDocumentController</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Controller</span>
+</span>{
+    <span class="hljs-keyword">private</span> <span class="hljs-variable">$ftpRepository</span>;
+    <span class="hljs-keyword">private</span> <span class="hljs-variable">$azureCloudContainer</span>;
+    <span class="hljs-keyword">private</span> <span class="hljs-variable">$client</span>;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">__construct</span>(<span class="hljs-params"></span>)
+    </span>{
+        <span class="hljs-comment">// FTP repository endpoint</span>
+        <span class="hljs-variable language_">$this</span>-&gt;ftpRepository = <span class="hljs-string">'ftp://your-ftp-repository.com'</span>;
+        <span class="hljs-comment">// Azure cloud container endpoint</span>
+        <span class="hljs-variable language_">$this</span>-&gt;azureCloudContainer = <span class="hljs-string">'https://your-azure-container.blob.core.windows.net'</span>;
+
+        <span class="hljs-comment">// Guzzle client to make HTTP requests</span>
+        <span class="hljs-variable language_">$this</span>-&gt;client = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Client</span>();
     }
 
-    public function getLatestDocument($prefix)
-    {
-        // Get the list of all zip files on the FTP repository for the given prefix
-        $zipFiles = $this->getZipFilesFromFTP($prefix);
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getLatestDocument</span>(<span class="hljs-params"><span class="hljs-variable">$prefix</span></span>)
+    </span>{
+        <span class="hljs-comment">// Get the list of all zip files on the FTP repository for the given prefix</span>
+        <span class="hljs-variable">$zipFiles</span> = <span class="hljs-variable language_">$this</span>-&gt;<span class="hljs-title function_ invoke__">getZipFilesFromFTP</span>(<span class="hljs-variable">$prefix</span>);
 
-        // Loop through each zip file to check if it's already available on Azure
-        foreach ($zipFiles as $zipFile) {
-            // Get the Azure blob URL for the current zip file
-            $azureBlobUrl = $this->getAzureBlobUrl($zipFile);
+        <span class="hljs-comment">// Loop through each zip file to check if it's already available on Azure</span>
+        <span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$zipFiles</span> <span class="hljs-keyword">as</span> <span class="hljs-variable">$zipFile</span>) {
+            <span class="hljs-comment">// Get the Azure blob URL for the current zip file</span>
+            <span class="hljs-variable">$azureBlobUrl</span> = <span class="hljs-variable language_">$this</span>-&gt;<span class="hljs-title function_ invoke__">getAzureBlobUrl</span>(<span class="hljs-variable">$zipFile</span>);
 
-            // Check if the zip file is available on Azure
-            $azureBlobExists = $this->checkIfAzureBlobExists($azureBlobUrl);
+            <span class="hljs-comment">// Check if the zip file is available on Azure</span>
+            <span class="hljs-variable">$azureBlobExists</span> = <span class="hljs-variable language_">$this</span>-&gt;<span class="hljs-title function_ invoke__">checkIfAzureBlobExists</span>(<span class="hljs-variable">$azureBlobUrl</span>);
 
-            // If the zip file is not available on Azure, download it from FTP
-            if (!$azureBlobExists) {
-                $this->downloadZipFileFromFTP($zipFile, $azureBlobUrl);
+            <span class="hljs-comment">// If the zip file is not available on Azure, download it from FTP</span>
+            <span class="hljs-keyword">if</span> (!<span class="hljs-variable">$azureBlobExists</span>) {
+                <span class="hljs-variable language_">$this</span>-&gt;<span class="hljs-title function_ invoke__">downloadZipFileFromFTP</span>(<span class="hljs-variable">$zipFile</span>, <span class="hljs-variable">$azureBlobUrl</span>);
             }
         }
 
-        // Get the latest zip file for the given prefix from Azure
-        $latestZipFile = $this->getLatestZipFileFromAzure($prefix);
+        <span class="hljs-comment">// Get the latest zip file for the given prefix from Azure</span>
+        <span class="hljs-variable">$latestZipFile</span> = <span class="hljs-variable language_">$this</span>-&gt;<span class="hljs-title function_ invoke__">getLatestZipFileFromAzure</span>(<span class="hljs-variable">$prefix</span>);
 
-        // Extract the latest document from the zip file
-        $latestDocument = $this->extractLatestDocument($latestZipFile, $prefix);
+        <span class="hljs-comment">// Extract the latest document from the zip file</span>
+        <span class="hljs-variable">$latestDocument</span> = <span class="hljs-variable language_">$this</span>-&gt;<span class="hljs-title function_ invoke__">extractLatestDocument</span>(<span class="hljs-variable">$latestZipFile</span>, <span class="hljs-variable">$prefix</span>);
 
-        return $latestDocument;
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$latestDocument</span>;
     }
 
-    private function getZipFilesFromFTP($prefix)
-    {
-        // Code to get the list of all zip files from the FTP repository for the given prefix
-   $ftp_server = 'ftp.example.com';
-        $ftp_username = 'username';
-        $ftp_password = 'password';
+    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getZipFilesFromFTP</span>(<span class="hljs-params"><span class="hljs-variable">$prefix</span></span>)
+    </span>{
+        <span class="hljs-comment">// Code to get the list of all zip files from the FTP repository for the given prefix</span>
+    }
 
-        $conn = ftp_connect($ftp_server) or die("Could not connect to $ftp_server");
-        $login = ftp_login($conn, $ftp_username, $ftp_password);
+    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getAzureBlobUrl</span>(<span class="hljs-params"><span class="hljs-variable">$zipFile</span></span>)
+    </span>{
+        <span class="hljs-comment">// Code to generate the Azure blob URL for the given zip file</span>
+    }
 
-        ftp_pasv($conn, true);
+    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">checkIfAzureBlobExists</span>(<span class="hljs-params"><span class="hljs-variable">$azureBlobUrl</span></span>)
+    </span>{
+        <span class="hljs-comment">// Code to check if the given Azure blob URL exists</span>
+    }
 
-        $files = ftp_nlist($conn, '.');
+    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">downloadZipFileFromFTP</span>(<span class="hljs-params"><span class="hljs-variable">$zipFile</span>, <span class="hljs-variable">$azureBlobUrl</span></span>)
+    </span>{
+        <span class="hljs-comment">// Code to download the zip file from FTP and upload it to Azure</span>
+    }
 
-        $zip_files = array();
-        foreach ($files as $file) {
-            if (strpos($file, $prefix) === 0 && strpos($file, '.zip') !== false) {
-                $zip_files[] = $file;
+    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getLatestZipFileFromAzure</span>(<span class="hljs-params"><span class="hljs-variable">$prefix</span></span>)
+    </span>{
+        <span class="hljs-comment">// Code to get the latest zip file for the given prefix from Azure</span>
+    }
+
+    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">extractLatestDocument</span>(<span class="hljs-params"><span class="hljs-variable">$latestZipFile</span>, <span class="hljs-variable">$prefix</span></span>)
+    </span>{
+        <span class="hljs-comment">// Code to extract the latest document from the zip file</span>
+    }
+}
+
+</code>
+    
+    <hr />
+    <code class="!whitespace-pre hljs language-php"><span class="hljs-meta">&lt;?php</span>
+
+<span class="hljs-keyword">namespace</span> <span class="hljs-title class_">App</span>\<span class="hljs-title class_">Http</span>\<span class="hljs-title class_">Controllers</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">Illuminate</span>\<span class="hljs-title">Http</span>\<span class="hljs-title">Request</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">Illuminate</span>\<span class="hljs-title">Support</span>\<span class="hljs-title">Facades</span>\<span class="hljs-title">Storage</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">Illuminate</span>\<span class="hljs-title">Support</span>\<span class="hljs-title">Facades</span>\<span class="hljs-title">Log</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">FTPController</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Controller</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getZipFiles</span>(<span class="hljs-params"><span class="hljs-variable">$prefix</span></span>)
+    </span>{
+        <span class="hljs-variable">$ftp_server</span> = <span class="hljs-string">'ftp.example.com'</span>;
+        <span class="hljs-variable">$ftp_username</span> = <span class="hljs-string">'username'</span>;
+        <span class="hljs-variable">$ftp_password</span> = <span class="hljs-string">'password'</span>;
+
+        <span class="hljs-variable">$conn</span> = <span class="hljs-title function_ invoke__">ftp_connect</span>(<span class="hljs-variable">$ftp_server</span>) <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span>(<span class="hljs-string">"Could not connect to <span class="hljs-subst">$ftp_server</span>"</span>);
+        <span class="hljs-variable">$login</span> = <span class="hljs-title function_ invoke__">ftp_login</span>(<span class="hljs-variable">$conn</span>, <span class="hljs-variable">$ftp_username</span>, <span class="hljs-variable">$ftp_password</span>);
+
+        <span class="hljs-title function_ invoke__">ftp_pasv</span>(<span class="hljs-variable">$conn</span>, <span class="hljs-literal">true</span>);
+
+        <span class="hljs-variable">$files</span> = <span class="hljs-title function_ invoke__">ftp_nlist</span>(<span class="hljs-variable">$conn</span>, <span class="hljs-string">'.'</span>);
+
+        <span class="hljs-variable">$zip_files</span> = <span class="hljs-keyword">array</span>();
+        <span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$files</span> <span class="hljs-keyword">as</span> <span class="hljs-variable">$file</span>) {
+            <span class="hljs-keyword">if</span> (<span class="hljs-title function_ invoke__">strpos</span>(<span class="hljs-variable">$file</span>, <span class="hljs-variable">$prefix</span>) === <span class="hljs-number">0</span> &amp;&amp; <span class="hljs-title function_ invoke__">strpos</span>(<span class="hljs-variable">$file</span>, <span class="hljs-string">'.zip'</span>) !== <span class="hljs-literal">false</span>) {
+                <span class="hljs-variable">$zip_files</span>[] = <span class="hljs-variable">$file</span>;
             }
         }
 
-        ftp_close($conn);
+        <span class="hljs-title function_ invoke__">ftp_close</span>(<span class="hljs-variable">$conn</span>);
 
-        return $zip_files;
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$zip_files</span>;
+    }
+}
+</code>
+    <hr />
+    <code class="!whitespace-pre hljs language-php"><span class="hljs-meta">&lt;?php</span>
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">GuzzleHttp</span>\<span class="hljs-title">Client</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getLatestDocument</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> <span class="hljs-variable">$prefix</span></span>) </span>{
+    <span class="hljs-variable">$client</span> = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Client</span>();
+
+    <span class="hljs-comment">// Get the list of files in the Azure cloud storage container, organized by year, month, and date</span>
+    <span class="hljs-variable">$response</span> = <span class="hljs-variable">$client</span>-&gt;<span class="hljs-title function_ invoke__">get</span>(<span class="hljs-string">'https://[your-azure-storage-url]/[your-container]/?restype=directory&amp;comp=list'</span>);
+    <span class="hljs-variable">$directories</span> = <span class="hljs-title function_ invoke__">json_decode</span>(<span class="hljs-variable">$response</span>-&gt;<span class="hljs-title function_ invoke__">getBody</span>()-&gt;<span class="hljs-title function_ invoke__">getContents</span>(), <span class="hljs-literal">true</span>)[<span class="hljs-string">'Directories'</span>];
+
+    <span class="hljs-comment">// Filter the directories to find the latest directory for the given prefix</span>
+    <span class="hljs-variable">$latestDirectory</span> = <span class="hljs-title function_ invoke__">array_reduce</span>(<span class="hljs-variable">$directories</span>, function (<span class="hljs-variable">$latest</span>, <span class="hljs-variable">$directory</span>) <span class="hljs-keyword">use</span> ($<span class="hljs-title">prefix</span>) {
+        $<span class="hljs-title">directoryPrefix</span> = <span class="hljs-title">substr</span>($<span class="hljs-title">directory</span>['<span class="hljs-title">Name</span>'], 0, <span class="hljs-title">strlen</span>($<span class="hljs-title">prefix</span>));
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable">$directoryPrefix</span> !== <span class="hljs-variable">$prefix</span>) {
+            <span class="hljs-keyword">return</span> <span class="hljs-variable">$latest</span>;
+        }
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable">$latest</span> === <span class="hljs-literal">null</span> || <span class="hljs-variable">$directory</span>[<span class="hljs-string">'Name'</span>] &gt; <span class="hljs-variable">$latest</span>[<span class="hljs-string">'Name'</span>]) {
+            <span class="hljs-keyword">return</span> <span class="hljs-variable">$directory</span>;
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$latest</span>;
+    }, <span class="hljs-literal">null</span>);
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-variable">$latestDirectory</span> === <span class="hljs-literal">null</span>) {
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Exception</span>(<span class="hljs-string">"No directory found with prefix <span class="hljs-subst">$prefix</span>"</span>);
     }
 
-    private function getAzureBlobUrl($zipFile)
-    {
-        // Code to generate the Azure blob URL for the given zip file
+    <span class="hljs-comment">// Get the list of files in the latest directory</span>
+    <span class="hljs-variable">$response</span> = <span class="hljs-variable">$client</span>-&gt;<span class="hljs-title function_ invoke__">get</span>(<span class="hljs-string">'https://[your-azure-storage-url]/[your-container]/'</span> . <span class="hljs-variable">$latestDirectory</span>[<span class="hljs-string">'Name'</span>] . <span class="hljs-string">'?restype=directory&amp;comp=list'</span>);
+    <span class="hljs-variable">$files</span> = <span class="hljs-title function_ invoke__">json_decode</span>(<span class="hljs-variable">$response</span>-&gt;<span class="hljs-title function_ invoke__">getBody</span>()-&gt;<span class="hljs-title function_ invoke__">getContents</span>(), <span class="hljs-literal">true</span>)[<span class="hljs-string">'Files'</span>];
+
+    <span class="hljs-comment">// Find the latest file in the latest directory</span>
+    <span class="hljs-variable">$latestFile</span> = <span class="hljs-title function_ invoke__">array_reduce</span>(<span class="hljs-variable">$files</span>, function (<span class="hljs-variable">$latest</span>, <span class="hljs-variable">$file</span>) <span class="hljs-keyword">use</span> ($<span class="hljs-title">prefix</span>) {
+        $<span class="hljs-title">filePrefix</span> = <span class="hljs-title">substr</span>($<span class="hljs-title">file</span>['<span class="hljs-title">Name</span>'], 0, <span class="hljs-title">strlen</span>($<span class="hljs-title">prefix</span>));
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable">$filePrefix</span> !== <span class="hljs-variable">$prefix</span>) {
+            <span class="hljs-keyword">return</span> <span class="hljs-variable">$latest</span>;
+        }
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable">$latest</span> === <span class="hljs-literal">null</span> || <span class="hljs-variable">$file</span>[<span class="hljs-string">'Name'</span>] &gt; <span class="hljs-variable">$latest</span>[<span class="hljs-string">'Name'</span>]) {
+            <span class="hljs-keyword">return</span> <span class="hljs-variable">$file</span>;
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$latest</span>;
+    }, <span class="hljs-literal">null</span>);
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-variable">$latestFile</span> === <span class="hljs-literal">null</span>) {
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Exception</span>(<span class="hljs-string">"No file found with prefix <span class="hljs-subst">$prefix</span> in directory "</span> . <span class="hljs-variable">$latestDirectory</span>[<span class="hljs-string">'Name'</span>]);
     }
 
-    private function checkIfAzureBlobExists($azureBlobUrl)
-    {
-        // Code to check if the given Azure blob URL exists
-    }
-
-    private function downloadZipFileFromFTP($zipFile, $azureBlobUrl)
-    {
-        // Code to download the zip file from FTP and upload it to Azure
-    }
-
-    private function getLatestZipFileFromAzure($prefix)
-    {
-        // Code to get the latest zip file for the given prefix from Azure
-    }
-
-    private function extractLatestDocument($latestZipFile, $prefix)
-    {
-        // Code to extract the latest document from the zip file
-    }
-}  
+    <span class="hljs-comment">// Download the latest file</span>
+    <span class="hljs-variable">$response</span> = <span class="hljs-variable">$client</span>-&gt;<span class="hljs-title function_ invoke__">get</span>(<span class="hljs-string">'https://[your-azure-storage-url]/[your-container]/'</span> . <span class="hljs-variable">$latestFile</span>[<span class="hljs-string">'Name'</span>]);
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$response</span>-&gt;<span class="hljs-title function_ invoke__">getBody</span>()-&gt;<span class="hljs-title function_ invoke__">getContents</span>();
+}
 </code>
 
   </body>
