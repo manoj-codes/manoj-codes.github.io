@@ -1,0 +1,117 @@
+<html>
+  <body>
+    <p>
+          Connect to the FTP repository using Laravel and Guzzle.
+    Fetch a list of all zip files in the FTP repository, sorted by date and time of creation.
+    Connect to the Azure cloud blob storage container.
+    Fetch a list of all zip files in the Azure cloud container.
+    Compare the two lists of zip files to determine which ones are only present in the FTP repository.
+    Download only the latest zip files from the FTP repository that are not available in the Azure cloud container.
+    Upload the latest zip files to the Azure cloud container if they don't exist.
+    Extract only the latest files starting with "ABC_", "DEF_", or "KLM_" from the latest zip files.
+    Upload the latest extracted files to separate directories in the Azure cloud based on their suffix date.
+    Retrieve the latest document for a given prefix by searching the directories in the Azure cloud based on the date in the file name.
+    Store and manage the latest extracted files with a chronological file management and version control structure in the Azure cloud.
+    Optionally, further optimize the efficiency by checking a local cache of the files, rather than re-downloading them from the FTP repository every time.
+    </p>
+<code>
+class LatestDocumentController extends Controller
+{
+    private $ftpRepository;
+    private $azureCloudContainer;
+    private $client;
+
+    public function __construct()
+    {
+        // FTP repository endpoint
+        $this->ftpRepository = 'ftp://your-ftp-repository.com';
+        // Azure cloud container endpoint
+        $this->azureCloudContainer = 'https://your-azure-container.blob.core.windows.net';
+
+        // Guzzle client to make HTTP requests
+        $this->client = new Client();
+    }
+
+    public function getLatestDocument($prefix)
+    {
+        // Get the list of all zip files on the FTP repository for the given prefix
+        $zipFiles = $this->getZipFilesFromFTP($prefix);
+
+        // Loop through each zip file to check if it's already available on Azure
+        foreach ($zipFiles as $zipFile) {
+            // Get the Azure blob URL for the current zip file
+            $azureBlobUrl = $this->getAzureBlobUrl($zipFile);
+
+            // Check if the zip file is available on Azure
+            $azureBlobExists = $this->checkIfAzureBlobExists($azureBlobUrl);
+
+            // If the zip file is not available on Azure, download it from FTP
+            if (!$azureBlobExists) {
+                $this->downloadZipFileFromFTP($zipFile, $azureBlobUrl);
+            }
+        }
+
+        // Get the latest zip file for the given prefix from Azure
+        $latestZipFile = $this->getLatestZipFileFromAzure($prefix);
+
+        // Extract the latest document from the zip file
+        $latestDocument = $this->extractLatestDocument($latestZipFile, $prefix);
+
+        return $latestDocument;
+    }
+
+    private function getZipFilesFromFTP($prefix)
+    {
+        // Code to get the list of all zip files from the FTP repository for the given prefix
+   $ftp_server = 'ftp.example.com';
+        $ftp_username = 'username';
+        $ftp_password = 'password';
+
+        $conn = ftp_connect($ftp_server) or die("Could not connect to $ftp_server");
+        $login = ftp_login($conn, $ftp_username, $ftp_password);
+
+        ftp_pasv($conn, true);
+
+        $files = ftp_nlist($conn, '.');
+
+        $zip_files = array();
+        foreach ($files as $file) {
+            if (strpos($file, $prefix) === 0 && strpos($file, '.zip') !== false) {
+                $zip_files[] = $file;
+            }
+        }
+
+        ftp_close($conn);
+
+        return $zip_files;
+    }
+
+    private function getAzureBlobUrl($zipFile)
+    {
+        // Code to generate the Azure blob URL for the given zip file
+    }
+
+    private function checkIfAzureBlobExists($azureBlobUrl)
+    {
+        // Code to check if the given Azure blob URL exists
+    }
+
+    private function downloadZipFileFromFTP($zipFile, $azureBlobUrl)
+    {
+        // Code to download the zip file from FTP and upload it to Azure
+    }
+
+    private function getLatestZipFileFromAzure($prefix)
+    {
+        // Code to get the latest zip file for the given prefix from Azure
+    }
+
+    private function extractLatestDocument($latestZipFile, $prefix)
+    {
+        // Code to extract the latest document from the zip file
+    }
+}  
+</code>
+
+  </body>
+</html>
